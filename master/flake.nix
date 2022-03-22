@@ -8,8 +8,8 @@
   inputs.flakeNimbleLib.inputs.nixpkgs.follows = "nixpkgs";
   
   inputs.src-latexdsl-master.flake = false;
+  inputs.src-latexdsl-master.ref   = "refs/heads/master";
   inputs.src-latexdsl-master.owner = "Vindaar";
-  inputs.src-latexdsl-master.ref   = "master";
   inputs.src-latexdsl-master.repo  = "LatexDSL";
   inputs.src-latexdsl-master.type  = "github";
   
