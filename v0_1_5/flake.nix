@@ -11,6 +11,7 @@
   inputs.src-latexdsl-v0_1_5.ref   = "refs/tags/v0.1.5";
   inputs.src-latexdsl-v0_1_5.owner = "Vindaar";
   inputs.src-latexdsl-v0_1_5.repo  = "LatexDSL";
+  inputs.src-latexdsl-v0_1_5.dir   = "";
   inputs.src-latexdsl-v0_1_5.type  = "github";
   
   inputs."datamancer".owner = "nim-nix-pkgs";
