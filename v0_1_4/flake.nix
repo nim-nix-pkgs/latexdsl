@@ -11,7 +11,6 @@
   inputs.src-latexdsl-v0_1_4.ref   = "refs/tags/v0.1.4";
   inputs.src-latexdsl-v0_1_4.owner = "Vindaar";
   inputs.src-latexdsl-v0_1_4.repo  = "LatexDSL";
-  inputs.src-latexdsl-v0_1_4.dir   = "";
   inputs.src-latexdsl-v0_1_4.type  = "github";
   
   outputs = { self, nixpkgs, flakeNimbleLib, ...}@deps:
