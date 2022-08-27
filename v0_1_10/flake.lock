@@ -356,7 +356,7 @@
         "datamancer": "datamancer",
         "flakeNimbleLib": "flakeNimbleLib",
         "nixpkgs": "nixpkgs",
-        "src-latexdsl-master": "src-latexdsl-master"
+        "src-latexdsl-v0_1_10": "src-latexdsl-v0_1_10"
       }
     },
     "src-arraymancer-v0_7_15": {
@@ -410,19 +410,19 @@
         "type": "github"
       }
     },
-    "src-latexdsl-master": {
+    "src-latexdsl-v0_1_10": {
       "flake": false,
       "locked": {
-        "lastModified": 1661161505,
-        "narHash": "sha256-JMCCSiHS9mJp8BtBp5Z7hj56uywl7Zp7IHPVB7nXvl4=",
+        "lastModified": 1660845800,
+        "narHash": "sha256-Ey6HO9Q1UsDwo9o8X0k+Pta20zYr8GG1/mAKPAXXnMg=",
         "owner": "Vindaar",
         "repo": "LatexDSL",
-        "rev": "54ebd8585037e8d62b5ad511c7aac1ffcbe69471",
+        "rev": "61272297113e761a0c5bfc570abb3b922a3ef76d",
         "type": "github"
       },
       "original": {
         "owner": "Vindaar",
-        "ref": "refs/heads/master",
+        "ref": "refs/tags/v0.1.10",
         "repo": "LatexDSL",
         "type": "github"
       }
