@@ -1,0 +1,262 @@
+* LaTeX DSL
+
+=latexdsl= provides a convenient macro (and very soon a bunch of
+helper templates / macros) to generate LaTeX code from Nim.
+
+The very short version is, it allows you to write:
+#+begin_src nim
+let lang = "english"
+let res = latex:
+  \documentclass{article}
+  \usepackage[`lang`]{babel}
+  \usepackage[utf8]{inputenc}
+#+end_src
+to get:
+#+begin_src latex
+\documentclass{article}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+#+end_src
+
+Now this might not seem all that useful by itself "I can just write a
+string literal with string interpolation".
+
+Yes, _except_: Every TeX command either entered using explicit
+backslash or opening a statement list will be checked at compile time
+against an =enum= of allowed TeX commands! This means we get compile
+time checks without having to manually write a very large number of
+helper templates like the following:
+#+begin_src nim
+template bold(arg: untyped): untyped = "\\textbf{" & $arg & "}"
+#+end_src
+For limited TeX application in a project that's certainly enough but
+definitely not scalable.
+
+The same is done for every command that has a statement list as
+its argument. That's also where another convenience feature comes in:
+any Nim block will be understood as a
+#+begin_src latex
+\begin{command} 
+your TeX
+\end{command}
+#+end_src
+command. So the following:
+#+begin_src nim :results raw
+import latexdsl
+let res = latex:
+  center:
+    figure:
+      \includegraphics[width=r"0.8\textwidth"]{myImage}
+echo res
+#+end_src
+(Note the usage of raw string literals to work around stuff that isn't
+allowed as Nim syntax)
+
+does generate what you would expect:
+#+begin_src latex
+\begin{center}
+\begin{figure}
+\includegraphics[width=0.8\textwidth]{myImage}
+\end{figure}
+\end{center}
+#+end_src
+
+
+Any optional parameter within =[]= will simply be handed as is into
+the result. The same is true for arguments within ={}= or any other
+command.
+
+The compile time checks are done on:
+- anything starting with a =\=: =\myCommandToBeChecked=
+- anything that opens its own block:
+  #+begin_src nim
+  let res = latex:
+    blockCommand[anOption]{anArgument}{anotherArgument}:
+      "Some random stuff here"
+      \checkMe
+  #+end_src
+  Here =blockCommand= and =\checkMe= will be checked for validity
+  while the other identifiers won't be.
+
+In case a command is not part of the =enum= yet, you can omit the CT
+check by prepending with two =\\= instead of one.
+
+** An example of available sugar
+
+Without making this example more complicated than necessary, let's
+consider an artificial case of performing some data analysis, ending
+up with a plot and the desire to convert both our data and plot into
+something directly embeddable in a TeX document.
+
+#+begin_src nim :tangle examples/plotToTex.nim
+import ggplotnim, latexdsl, strformat
+
+# let's assume we have a complicated proc, which performs our
+# data analysis and returns the result as a ggplotnim `DataFrame`
+
+proc complexCalculation(): DataFrame =
+  # here be code your CPU hates ;)
+  result = seqsToDf({ "Num" : @[17, 43, 8, 22],
+                      "Group" : @["Group 1", "Group 2", "Group 3", "Group 4"] })
+
+# let's perform our complex calc
+let df = complexCalculation()
+# and create a fancy plot for it
+let path = "examples/dummy_plot.png"
+ggplot(df, aes(Group, Num)) + 
+  geom_bar(stat = "identity") + 
+  xlab("Age group") +
+  ylab("Number of participants") +
+  ggsave(path)
+
+# now we could construct a TeX figure and table for the data manually,
+# but for these use cases two helper procs exist. `figure` and `toTexTable`.
+
+# We want to include the information about the group with the most participants
+# into the caption of the table. So create the correct caption computationally
+# without having to worry about causing code / paper to get out of sync
+echo df
+let maxGroup = df.filter(f{int -> bool: `Num` == max(df["Num"])})
+echo maxGroup
+# create two nice labels:
+let figLab = "fig:sec:ana:participants"
+let tabLab = "tab:sec:ana:participants"
+# for simplicity we will use the same caption for figure and table, with different
+# references
+let cap = "Number of participants in the experiment by age group. Group " &
+  &"{maxGroup[\"Group\", 0]} had the most participants with {maxGroup[\"Num\", 0]}" &
+  " subjects."
+# and add a reference to the table we will create 
+let figCap = latex:
+  "The data used for the figure is found in tab. " \ref{`tabLab`} "."
+let fig = figure(path, caption = cap & figCap, label = figLab, width = textwidth(0.8),
+                 checkFile = true)
+# NOTE: The `checkFile` argument performs a runtime check on the given path to make
+# sure the file that is supposed to be put into a TeX document actually exists!
+# and finally for the table:
+let tabCap = latex:
+  "The data is plotted in fig. " \ref{`figLab`} "."
+let tab = toTexTable(df, caption = cap & tabCap, label = tabLab)
+
+# and from here we could insert the generated TeX code directly into a TeX document.
+# We'll just print it here.
+echo fig
+echo tab
+#+end_src
+Which generates the following plot:
+
+[[./examples/dummy_plot.png]]
+
+and outputs the following TeX code to the terminal (this is the
+unformatted output):
+#+begin_src TeX
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.8\textwidth]{examples/dummy_plot.png}
+\label{fig:sec:ana:participants}
+\caption{Number of participants in the experiment by age group. Group Group 2 had the most participants with 43 subjects.The data used for the figure is found in tab. \ref{tab:sec:ana:participants}.
+}
+
+\end{figure}
+
+
+
+\begin{table}[htbp]
+\centering
+
+\begin{tabular}{l l}
+\toprule
+Num & Group\\
+\midrule
+17 & Group 1\\
+43 & Group 2\\
+8 & Group 3\\
+22 & Group 4
+\bottomrule
+\end{tabular}
+
+\caption{Number of participants in the experiment by age group. Group Group 2 had the most participants with 43 subjects.The data is plotted in fig. \ref{fig:sec:ana:participants}.
+}
+\label{tab:sec:ana:participants}
+
+\end{table}
+#+end_src
+
+*NOTE*: The Dataframe helper functionality is only available on Nim
+versions starting from v1.6!
+
+** Caveats
+
+Of course not every possible LaTeX code can be represented as valid
+Nim code. The known caveats and workarounds are listed here:
+
+- value + unit pairs, e.g.
+  #+begin_src TeX
+  margin=2cm
+  #+end_src
+  Use string literal:
+  #+begin_src nim
+  margin="2cm"
+  #+end_src
+- string literals for TeX commands, be sure to use raw literals, due
+  to =\r, \n, \p= etc being interpreted as control
+  characters. E.g. here we need string literals, because =#= is a Nim comment:
+  #+begin_src TeX
+  \protect\numberline{\thesection}#1
+  #+end_src
+  #+begin_src nim
+  r"\protect\numberline{\thesection}#1"
+  #+end_src
+- multiline arguments to ={}=:
+  #+begin_src TeX
+  \newcommand\invisiblesection[1]{
+    \refstepcounter{section}
+    \addcontentsline{toc}{section}{r"\protect\numberline{\thesection}#1"}
+    \sectionmark{"#1"}
+  }
+  #+end_src
+  Use Nim Pragma syntax for multiline blocks, ={. multiLine .}=:
+  #+begin_src nim
+  \newcommand\invisiblesection[1]{.
+    \refstepcounter{section}
+    \addcontentsline{toc}{section}{r"\protect\numberline{\thesection}#1"}
+    \sectionmark{"#1"}
+  .}
+  #+end_src
+  NOTE: this still has a downside: you cannot do nested blocks inside
+  the pragma syntax!
+
+** Soon to come
+
+Soon there will be convenience features to e.g. turn a number of same
+length Nim sequences to a LaTeX table or helper templates to create a
+figure.
+
+Also a nice feature would be to generate a full basic TeX file to
+write the created TeX code into a document and compile it. 
+
+In addition to that the compile time checking =enum= will be
+extendable at CT using =registerTexCommand=.
+
+** Just why?
+
+Well, I had to generate a bunch of PDFs from a database for the
+modules / courses in each degree at my department at Uni. At first I
+wrote the code for TeX generation based on pure string
+interpolation. But that hurt my soul knowing what Nim is capable
+of. 
+
+So that's why I decided to see how far one can push native TeX as
+valid Nim code. Pretty happy with it. 
+
+The main part of the code that generates the files mentioned above
+there can be found here:
+
+https://gist.github.com/Vindaar/545cf13fb09d75843ea0eef0dec1dae0
+
+(the full code is only hosted on an internal, non public Bitbucket
+instance unfortunately).
+
+Maybe still not the prettiest Nim code one has ever seen (and that
+file there is WIP anyway), but the TeX parts aren't gonna change a
+whole lot. At least I'm happy with this. :)

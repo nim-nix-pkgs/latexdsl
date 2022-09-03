@@ -1,0 +1,72 @@
+* v0.1.11
+- make sure =math= can be used inside of a template, by adding a
+  =unsym= stage before actually entering the DSL logic. We use a check
+  for nim symbols in the logic to avoid infinite recursions, so
+  receiving a symbol from the input causes things to break
+- =MathDelim= can be set more easily in a =static= context now
+- remove dependency on datamancer (only for tests)
+- add dependency for =shell= (for latex compilation)
+- add more tests        
+* v0.1.10
+- make sure =compile= can be used in a =static= context
+  (Note to self: =shell= only works in NimScript, but not in =nimvm=...)
+* v0.1.9
+- add =mathrm= as valid TeX command
+- handle int and float literals correctly
+- when using =_= after a TeX command only check the part before as a
+  valid / invalid TeX command    
+* v0.1.8
+- add missing =frac= as valid TeX command
+- add =latexdsl_nochecks= module that can be imported to deactivate CT
+  checks. This is useful if you have static code that uses latexdsl
+  and wants to avoid the expensive CT penalty of generating the enum
+  for the allowed commands on each compilation.
+- add =latex_compiler= submodule that allows to directly compile a
+  latex snippet as a standalone and produce a PDF from it
+- add =math= scope that can be used to auto wrap a body in a math
+  environment. The delimiter is =$= by default but can be changed at
+  CT (using a =static= block) using the =MathDelim= variable.
+* v0.1.7
+- add support for Nim v1.4 again, only =toTexTable= is exempt, which
+  allows dependencies to support 1.4
+* v0.1.6
+- refactor code to split helpers and DSL
+- drop support for Nim 1.4, as the concepts for the helpers break the
+  compiler, due to the TeX command enum having characters that are
+  binary operators (fixed in 1.6, so I'm not going to work around that
+  for old Nim, sorry)
+* v0.1.5
+- set up docs
+- set up CI via Github Actions
+- replace internal =&= =NimNode= concatenation by =&&=
+- do not export =strformat= any longer    
+* v0.1.4
+- improve handling of =nnkCommand= to automatically insert
+  spaces. This is for the typical case of writing multiple identifiers
+  after another to not have to add manual spaces.
+- handle =nnkBracket= and =nnkAsgn= (as well as =nnkIdent= to an
+  extent)
+- allow quoting of Nim expressions using =$(...)= syntax. Any Nim
+  expression that can be string evaluated using =$= is allowed in the construct.
+* v0.1.3
+- allow pragma syntax ={. ... .}= for multiline ={}= arguments
+- properly handle successive tex commands using =\= (nnkInfix)
+- add some caveats to README
+- add some tabularx commands to CT checked list
+- add =tableRows= helper proc to join a =varargs[string]= into a valid
+  TeX table row
+* v0.1.2
+- improve example in README to make use of =latex= macro for the
+  captions. Why have it and not use it?
+- allow =nnkRefTy= (for =\ref=), =nnkCurly= and check commands only if
+  not a nested =nnkAccQuoted=
+* v0.1.1
+- add sugar:
+  - =figure=: create TeX code for a figure, including the option to
+    check whether the file exists at runtime
+  - =toTexTable=: converts something like a ggplotnim =DataFrame= to a
+    TeX table
+- fix an issue with accidentally looking at already parsed TeX code again
+* v0.1.0
+- basic =latex= macro with compile time checks of most important TeX
+  commands is working, allowing for Nim symbol interpolation
