@@ -83,11 +83,11 @@
       },
       "locked": {
         "dir": "v0_3_8",
-        "lastModified": 1667331371,
-        "narHash": "sha256-f0K8oRffXn8maN5WhFKRx1IkULV35W3Sm4FHsE1wz/Y=",
+        "lastModified": 1667336096,
+        "narHash": "sha256-GUUvOzuJJXuLvOWv+ui5BM1ZuvVQ/vtwNoOdauF8SSg=",
         "owner": "nim-nix-pkgs",
         "repo": "datamancer",
-        "rev": "ac42e5d56d6532781a038d40645540ceb76a16fc",
+        "rev": "7ffe2aa4d9d1a271d7ee8eabf0667ec49b9a22a5",
         "type": "github"
       },
       "original": {
